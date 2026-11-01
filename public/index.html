@@ -305,7 +305,7 @@ function renderStatic(){
   $("howtitle").textContent=t("howTitle");$("howlist").innerHTML=t("how").map(s=>`<li>${s}</li>`).join("");$("howtip").textContent=t("howTip");
   $("cards").innerHTML=`<button class="form-card upload" id="uploadcard"><span class="count">📄 ${t("anyForm")}</span><h3>${t("uploadTitle")}</h3><p>${t("uploadBlurb")}</p></button>`+S.forms.map(f=>`<button class="form-card" data-id="${f.id}"><span class="count">${f.fields.length} ${t("fields")}</span><h3>${L(f,"title")}</h3><p>${L(f,"blurb")}</p></button>`).join("");
   document.querySelectorAll(".form-card[data-id]").forEach(b=>b.onclick=()=>startForm(b.dataset.id));
-  $("uploadcard").onclick=()=>$("filein").click();
+  $("uploadcard").onclick=()=>{unlockAudio();$("filein").click()};
   $("typedin").placeholder=t("type");$("typedgo").textContent=t("send");
   $("replay").textContent="🔊 "+t("replay");$("back").textContent="← "+t("back");$("skip").textContent=t("skip")+" →";
   $("confirmall").textContent=t("confirmAll");$("readback").textContent="🔊 "+t("readback");$("print").textContent="🖨 "+t("print");$("again").textContent=t("again");
@@ -456,8 +456,20 @@ function updateBanner(pending){
 
 /* ---------- any form: upload -> Sarvam Vision OCR -> Sarvam-105B questions ---------- */
 function scanMsg(m){$("scanbox").classList.toggle("hide",!m);$("scanmsg").textContent=m||""}
+// Play a short silence inside the tap so mobile Safari lets later questions speak.
+function unlockAudio(){try{const n=800,b=new DataView(new ArrayBuffer(44+n*2));const w=(o,s)=>[...s].forEach((c,i)=>b.setUint8(o+i,c.charCodeAt(0)));
+  w(0,"RIFF");b.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");b.setUint32(16,16,true);b.setUint16(20,1,true);b.setUint16(22,1,true);b.setUint32(24,8000,true);b.setUint32(28,16000,true);b.setUint16(32,2,true);b.setUint16(34,16,true);w(36,"data");b.setUint32(40,n*2,true);
+  audio.src=URL.createObjectURL(new Blob([b],{type:"audio/wav"}));audio.play().catch(()=>{})}catch{}}
+// Phone photos are often several MB; shrink them so they fit the upload limit and OCR faster.
+async function shrinkImage(file){
+  if(!file.type.startsWith("image/")||file.size<1.5e6)return file;
+  try{const bmp=await createImageBitmap(file);const k=Math.min(1,2200/Math.max(bmp.width,bmp.height));
+    const c=document.createElement("canvas");c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+    const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",0.85));return blob?new File([blob],file.name.replace(/\.\w+$/,"")+".jpg",{type:"image/jpeg"}):file}catch{return file}
+}
 async function scanFile(file){
   if(!file)return;
+  file=await shrinkImage(file);
   if(file.size>4e6){toast(t("tooBig"),6000);return}
   scanMsg(t("scanUp"));$("uploadcard").disabled=true;
   try{

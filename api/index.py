@@ -358,7 +358,8 @@ def slug(s: str) -> str:
 
 
 def clip(v, n: int = 80) -> str:
-    return re.sub(r"\s+", " ", str(v or "")).strip()[:n]
+    # Document text ends up in the page, so angle brackets never survive.
+    return re.sub(r"\s+", " ", re.sub(r"[<>]", "", str(v or ""))).strip()[:n]
 
 
 def sanitize_field(f: dict) -> Optional[dict]:
