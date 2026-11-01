@@ -146,6 +146,7 @@ FORMS = {
 
 DEVANAGARI_DIGITS = str.maketrans("०१२३४५६७८९", "0123456789")
 HAS_INDIC = re.compile(r"[ऀ-෿]")
+GENERIC_SUFFIX = re.compile(r"\s+(jila|jilla|zila|zilla|district|gaon|gaanv|gaav|gram|village)$", re.I)
 
 
 def find_field(form_id: str, field_id: str) -> dict:
@@ -195,8 +196,12 @@ def parse_choice(text: str, field: dict) -> Optional[str]:
 def llm_extract(field: dict, transcript: str) -> dict:
     """Ask Sarvam-105B for one field value. The transcript is untrusted data."""
     kind = {
-        "name": "a person's name; keep it in the script it was spoken in, drop fillers like 'mera naam' and 'hai'",
-        "text": "a short noun phrase, fillers removed",
+        "text": (
+            "a short ENGLISH noun of 1-3 words, translated from what was said (e.g. 'Farmer', 'Tailor', 'Wheat', 'Paddy')"
+            if field.get("render") == "translate"
+            else "a proper noun (person or place name) exactly as spoken, in the original script; drop fillers such as "
+            "'mera naam', 'hai', and generic words such as जिला/ज़िला/district, गाँव/गांव/village, राज्य/state"
+        ),
         "date": f"a date as ISO YYYY-MM-DD (today is {dt.date.today().isoformat()}); null if day, month and year are not all given",
         "digits": f"exactly {field.get('length')} digits written as plain digits; convert spoken digit words",
         "number": "a plain number with no commas or units; convert words such as lakh (100000) and hazaar (1000)",
@@ -320,6 +325,7 @@ def resolve(field: dict, transcript: str, typed: bool, src: str = "hi-IN") -> di
         native = got["value"] if HAS_INDIC.search(got["value"]) else None
         value = to_english(got["value"], field.get("render", "translit"), src)
         value = clean_title(value) if field.get("render") != "translate" else value[:1].upper() + value[1:]
+        value = GENERIC_SUFFIX.sub("", value).strip(" .") or value
         confidence = got["confidence"]
         if len(value) > 120 or not re.search(r"[A-Za-z]", value):
             raise Rejected("That answer looks too long or unclear. Please say it again.", "यह उत्तर बहुत लंबा या अस्पष्ट है। कृपया फिर से बताइए।")
