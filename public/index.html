@@ -118,6 +118,13 @@ h1{font-size:clamp(28px,4.4vw,44px);line-height:1.1;letter-spacing:-.025em;margi
     <button id="lang-hi" aria-pressed="true" class="hi">हिन्दी</button>
     <button id="lang-en" aria-pressed="false">English</button>
   </div>
+  <label class="seg" style="padding:3px 10px;gap:6px;align-items:center;font-size:13px;color:var(--muted)">🎙
+    <select id="voice" aria-label="Speaking language" style="border:0;background:none;color:var(--ink);font:600 13.5px inherit;cursor:pointer">
+      <option value="hi">हिन्दी</option><option value="en">English</option><option value="mr">मराठी</option>
+      <option value="bn">বাংলা</option><option value="ta">தமிழ்</option><option value="te">తెలుగు</option>
+      <option value="gu">ગુજરાતી</option><option value="kn">ಕನ್ನಡ</option><option value="pa">ਪੰਜਾਬੀ</option>
+    </select>
+  </label>
 </header>
 
 <main>
@@ -201,7 +208,7 @@ const T={
     readIntro:"Your form is ready. Let me read it back.",
   }
 };
-const S={lang:"hi",forms:[],form:null,i:0,ans:{},busy:false,rec:null,fullAadhaar:false,finished:false};
+const S={lang:"hi",voice:"hi",forms:[],form:null,i:0,ans:{},busy:false,rec:null,fullAadhaar:false,finished:false};
 const audio=new Audio(); const ttsCache=new Map();
 const t=k=>T[S.lang][k];
 const L=(o,k)=>o[k+"_"+S.lang];
@@ -214,11 +221,24 @@ async function api(path,opts){
 }
 
 /* ---------- text-to-speech with prefetch cache ---------- */
-function ttsKey(text,mixed){return S.lang+"|"+(mixed?1:0)+"|"+text}
+const native=()=>S.voice==="hi"||S.voice==="en";
+const trCache=new Map();
+async function tr(texts){ // English -> speaking language via Sarvam-Translate
+  if(native())return texts;
+  const miss=texts.filter(s=>!trCache.has(S.voice+"|"+s));
+  if(miss.length){const r=await api("/api/translate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({texts:miss,lang:S.voice})});
+    miss.forEach((s,i)=>trCache.set(S.voice+"|"+s,r.texts[i]))}
+  return texts.map(s=>trCache.get(S.voice+"|"+s));
+}
+async function ensureQuestions(){
+  if(native()||!S.form)return;
+  const out=await tr(S.form.fields.map(f=>f.q_en));S.form.fields.forEach((f,i)=>f["q_"+S.voice]=out[i]);
+}
+function ttsKey(text,mixed){return S.voice+"|"+(mixed?1:0)+"|"+text}
 function fetchTTS(text,mixed=false){
   const k=ttsKey(text,mixed);
   if(!ttsCache.has(k)){
-    ttsCache.set(k,api("/api/tts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,lang:S.lang,mixed})}).then(r=>r.audio).catch(e=>{ttsCache.delete(k);throw e}));
+    ttsCache.set(k,api("/api/tts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,lang:S.voice,mixed})}).then(r=>r.audio).catch(e=>{ttsCache.delete(k);throw e}));
   }
   return ttsCache.get(k);
 }
@@ -250,19 +270,20 @@ function renderStatic(){
 async function startForm(id){
   S.form=S.forms.find(f=>f.id===id);S.i=0;S.ans={};S.finished=false;
   $("picker").classList.add("hide");$("app").classList.remove("hide");$("banner").classList.add("hide");$("finalbar").classList.add("hide");$("assistant").classList.remove("hide");
+  try{await ensureQuestions()}catch(e){toast(e.message)}
   renderQuestion();renderPaper();window.scrollTo({top:0,behavior:"smooth"});
   // The click is the user gesture that lets audio play.
   speakQuestion();
 }
 const fld=()=>S.form.fields[S.i];
-function qText(f,lang=S.lang){return lang==="hi"?f.q_hi:f.q_en}
+function qText(f){return f["q_"+S.voice]||f.q_en}
 function speakQuestion(){const f=fld();if(!f)return;speak(qText(f));prefetchNext()}
 function prefetchNext(){const n=S.form.fields[S.i+1];if(n)fetchTTS(qText(n)).catch(()=>{})}
 function setFeedback(msg,kind){const el=$("feedback");el.className="feedback"+(msg?" "+kind:"");el.textContent=msg||""}
 function renderQuestion(){
   const f=fld();if(!f)return;const n=S.form.fields.length;
   $("bar").style.width=(S.i/n*100)+"%";$("pcount").textContent=t("progress")(S.i+1,n);$("pform").textContent=L(S.form,"title");
-  $("qmain").textContent=qText(f);$("qsub").textContent=S.lang==="hi"?f.q_en:f.q_hi;$("qsub").lang=S.lang==="hi"?"en":"hi";
+  $("qmain").textContent=qText(f);$("qsub").textContent=S.voice==="en"?f.q_hi:f.q_en;
   $("typedin").inputMode=(f.type==="digits"||f.type==="number")?"numeric":"text";
   if(f.type==="choice")$("qsub").textContent=f.options.map(o=>L(o,"")+"").join(" · ");
   if(f.type==="choice")$("qsub").textContent=f.options.map(o=>S.lang==="hi"?o.hi:o.en).join(" · ");
@@ -311,12 +332,13 @@ async function blobToWav(blob){
 /* ---------- submit one answer ---------- */
 async function submit({audio:wav,text,fieldId,typed}){
   const f=fieldId?S.form.fields.find(x=>x.id===fieldId):fld();
-  const fd=new FormData();fd.append("form_id",S.form.id);fd.append("field_id",f.id);fd.append("lang",S.lang);
+  const fd=new FormData();fd.append("form_id",S.form.id);fd.append("field_id",f.id);fd.append("lang",S.voice);
   if(wav)fd.append("audio",wav,"answer.wav");else fd.append("text",text);
   const r=await api("/api/answer",{method:"POST",body:fd});
   $("heard").innerHTML=r.transcript?`${t("heard")} <q></q>`:"";if(r.transcript)$("heard").querySelector("q").textContent=r.transcript;
   if(!r.ok){
-    const msg=S.lang==="hi"?r.message_hi:r.message_en;setFeedback(msg,"err");speak(msg);return false;
+    let msg=S.voice==="hi"?r.message_hi:S.voice==="en"?r.message_en:(await tr([r.message_en]).catch(()=>[r.message_en]))[0];
+    setFeedback(msg,"err");speak(msg);return false;
   }
   setFeedback("","");
   S.ans[f.id]={value:r.value,native:r.native,status:r.status,fresh:true};
@@ -397,15 +419,18 @@ $("print").onclick=()=>window.print();
 $("again").onclick=()=>location.reload();
 $("home").onclick=()=>{if(S.form&&!confirm(S.lang==="hi"?"वापस जाएँ? अब तक के जवाब मिट जाएँगे।":"Go back? Your answers so far will be lost."))return;location.reload()};
 $("lang-hi").onclick=()=>{S.lang="hi";renderStatic()};$("lang-en").onclick=()=>{S.lang="en";renderStatic()};
+$("voice").onchange=async e=>{S.voice=e.target.value;if(!S.form||S.finished)return;
+  try{await ensureQuestions()}catch(err){toast(err.message)}renderQuestion();speakQuestion()};
 document.addEventListener("keydown",e=>{if(e.code==="Space"&&!/INPUT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)&&S.form&&!S.finished){e.preventDefault();toggleMic()}});
 $("readback").onclick=async()=>{
-  const parts=[t("readIntro")];
+  const hi=S.voice==="hi";
+  const parts=[hi?T.hi.readIntro:T.en.readIntro];
   S.form.fields.forEach(f=>{const a=S.ans[f.id];if(!a)return;let v=show(f,{...a});if(f.mask)v=a.value.replace(/\d/g,"$& ").trim();
-    parts.push(`${S.lang==="hi"?f.label_hi:f.label_en}: ${v}.`)});
-  const text=parts.join(" ");
+    parts.push(`${hi?f.label_hi:f.label_en}: ${v}.`)});
   // The API caps each request, so speak the read-back in chunks.
-  const chunks=[];let cur="";for(const p of parts){if((cur+" "+p).length>520){chunks.push(cur);cur=p}else cur=cur?cur+" "+p:p}if(cur)chunks.push(cur);
-  $("readback").disabled=true;try{for(const c of chunks)await speak(c,true)}finally{$("readback").disabled=false}
+  let chunks=[];let cur="";for(const p of parts){if((cur+" "+p).length>520){chunks.push(cur);cur=p}else cur=cur?cur+" "+p:p}if(cur)chunks.push(cur);
+  $("readback").disabled=true;
+  try{chunks=await tr(chunks).catch(()=>chunks);for(const c of chunks)await speak(c,hi)}finally{$("readback").disabled=false}
 };
 
 (async function init(){

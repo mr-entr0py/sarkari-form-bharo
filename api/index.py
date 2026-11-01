@@ -30,8 +30,19 @@ if _env.exists():
 STT_MODEL = "saaras:v4"
 LLM_MODEL = "sarvam-105b-conversations"
 TTS_MODEL = "bulbul:v4-flash"
-VOICES = {"hi": "aparna_hi_customer", "en": "simran_en_customer", "enhi": "simran_enhi_customer"}
-LANG_CODES = {"hi": "hi-IN", "en": "en-IN"}
+# Speaking language -> (BCP-47 code, Bulbul v4 persona)
+LANGS = {
+    "hi": ("hi-IN", "aparna_hi_customer"),
+    "en": ("en-IN", "simran_en_customer"),
+    "mr": ("mr-IN", "ishita_mr_conversational"),
+    "bn": ("bn-IN", "roopa_bn_conversational"),
+    "ta": ("ta-IN", "gokul_ta_narration"),
+    "te": ("te-IN", "kavitha_te_conversation"),
+    "gu": ("gu-IN", "bhavik_gu_conversation"),
+    "kn": ("kn-IN", "chaitra_kn_conversation"),
+    "pa": ("pa-IN", "anand_pa_conversation"),
+}
+HINGLISH_VOICE = "simran_enhi_customer"
 
 MAX_AUDIO_BYTES = 2_000_000
 MAX_TEXT_CHARS = 400
@@ -218,16 +229,17 @@ def llm_extract(field: dict, transcript: str) -> dict:
     return {"value": None if value in (None, "") else str(value).strip(), "confidence": data.get("confidence", "low")}
 
 
-def to_english(text: str, mode: str) -> str:
+def to_english(text: str, mode: str, src: str = "hi-IN") -> str:
     """Latin-script version of an Indic-script value (phonetic for names, meaning for text)."""
     if not HAS_INDIC.search(text):
         return text
+    src = src if src != "en-IN" else "hi-IN"
     if mode == "translate":
         r = client().text.translate(
-            input=text, source_language_code="hi-IN", target_language_code="en-IN", model="sarvam-translate:v1"
+            input=text, source_language_code=src, target_language_code="en-IN", model="sarvam-translate:v1"
         )
         return r.translated_text.strip()
-    r = client().text.transliterate(input=text, source_language_code="hi-IN", target_language_code="en-IN")
+    r = client().text.transliterate(input=text, source_language_code=src, target_language_code="en-IN")
     return r.transliterated_text.strip()
 
 
@@ -235,7 +247,7 @@ def clean_title(s: str) -> str:
     return " ".join(w.capitalize() if w.islower() else w for w in s.split())
 
 
-def resolve(field: dict, transcript: str, typed: bool) -> dict:
+def resolve(field: dict, transcript: str, typed: bool, src: str = "hi-IN") -> dict:
     """Turn a transcript into a validated value. Raises Rejected with a re-ask message."""
     t = transcript.strip()
     if not t:
@@ -306,7 +318,7 @@ def resolve(field: dict, transcript: str, typed: bool) -> dict:
         if not got["value"]:
             raise Rejected("I couldn't understand that. Please say it again.", "मैं समझ नहीं पाया। कृपया फिर से बताइए।")
         native = got["value"] if HAS_INDIC.search(got["value"]) else None
-        value = to_english(got["value"], field.get("render", "translit"))
+        value = to_english(got["value"], field.get("render", "translit"), src)
         value = clean_title(value) if field.get("render") != "translate" else value[:1].upper() + value[1:]
         confidence = got["confidence"]
         if len(value) > 120 or not re.search(r"[A-Za-z]", value):
@@ -347,7 +359,7 @@ async def answer(
 ):
     """One spoken (or typed) answer in, one validated field value out."""
     field = find_field(form_id, field_id)
-    lang = lang if lang in LANG_CODES else "hi"
+    code = LANGS.get(lang, LANGS["hi"])[0]
     typed = audio is None
     try:
         if audio is not None:
@@ -358,13 +370,13 @@ async def answer(
                 file=(audio.filename or "answer.wav", data, "audio/wav"),
                 model=STT_MODEL,
                 mode="transcribe",
-                language_code=LANG_CODES[lang],
+                language_code=code,
             )
             transcript = (stt.transcript or "").strip()
         else:
             transcript = (text or "").strip()[:MAX_TEXT_CHARS]
         try:
-            result = resolve(field, transcript, typed)
+            result = resolve(field, transcript, typed, code)
             return {"ok": True, "transcript": transcript, **result}
         except Rejected as r:
             return {"ok": False, "transcript": transcript, "message_en": r.en, "message_hi": r.hi}
@@ -378,14 +390,42 @@ class TTSRequest(BaseModel):
     mixed: bool = False
 
 
+class TranslateRequest(BaseModel):
+    texts: list[str] = Field(min_length=1, max_length=40)
+    lang: str
+
+
+@app.post("/api/translate")
+def translate(req: TranslateRequest):
+    """Translate English UI/question strings into the speaking language (parallel calls)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    if req.lang not in LANGS or req.lang == "en":
+        return {"texts": req.texts}
+    target = LANGS[req.lang][0]
+
+    def one(s: str) -> str:
+        r = client().text.translate(
+            input=s[:1000], source_language_code="en-IN", target_language_code=target, model="sarvam-translate:v1"
+        )
+        return r.translated_text
+
+    try:
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            return {"texts": list(pool.map(one, req.texts))}
+    except ApiError as e:
+        raise api_error(e)
+
+
 @app.post("/api/tts")
 def tts(req: TTSRequest):
-    lang = req.lang if req.lang in LANG_CODES else "hi"
-    speaker = VOICES["enhi"] if (req.mixed and lang == "hi") else VOICES[lang]
+    code, speaker = LANGS.get(req.lang, LANGS["hi"])
+    if req.mixed and req.lang == "hi":
+        speaker = HINGLISH_VOICE
     try:
         r = client().text_to_speech.convert(
             text=req.text,
-            language_code=LANG_CODES[lang],
+            language_code=code,
             model=TTS_MODEL,
             speaker=speaker,
             enable_preprocessing=True,
