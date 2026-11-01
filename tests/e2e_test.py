@@ -44,7 +44,7 @@ VOICE = [
     ("kisan", "aadhaar", "तीन चार पाँच छह सात आठ नौ शून्य एक दो तीन चार", eq("345678901234")),
     ("kisan", "mobile", "आठ आठ आठ सात सात सात छह छह छह पाँच", eq("8887776665")),
     ("kisan", "state", "उत्तर प्रदेश", has("uttar")),
-    ("kisan", "district", "मेरठ", starts("mer", "meer")),
+    ("kisan", "district", "मेरा ज़िला मेरठ है", starts("mer", "meer")),
     ("kisan", "village", "मेरे गाँव का नाम सरधना है", starts("sar")),
     ("kisan", "land", "मेरे पास ढाई एकड़ ज़मीन है", eq("2.5")),
     ("kisan", "crop", "मैं गेहूँ उगाता हूँ", eq("Wheat")),
