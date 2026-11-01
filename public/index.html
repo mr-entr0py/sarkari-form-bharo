@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sarkari Form Bharo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23138808'/><text x='50' y='68' font-size='58' text-anchor='middle' fill='white'>भ</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf7f2; --card:#ffffff; --ink:#1d2433; --muted:#5b6475; --line:#e6e0d4;
+  --saffron:#e8730c; --saffron-soft:#fff1e2; --green:#138808; --green-soft:#e6f4e4;
+  --amber:#a15c00; --amber-soft:#fff3d6; --red:#b3261e; --red-soft:#fde8e6; --navy:#1f3a68;
+  --radius:16px; --shadow:0 1px 2px rgba(29,36,51,.06),0 8px 24px rgba(29,36,51,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#14161c;--card:#1d2028;--ink:#eef0f5;--muted:#a3abbb;--line:#2e3340;--saffron-soft:#3a2a18;--green-soft:#17301a;--amber-soft:#3a2f12;--red-soft:#3b1b19;--amber:#f0b44c;--red:#ff8a80;--green:#5ccf4f}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 Inter,"Noto Sans Devanagari",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.hi,[lang=hi]{font-family:"Noto Sans Devanagari",Inter,system-ui,sans-serif}
+.tricolor{height:5px;background:linear-gradient(90deg,#ff9933 0 33.3%,#fff 33.3% 66.6%,#138808 66.6%);border-bottom:1px solid var(--line)}
+header{display:flex;align-items:center;gap:12px;padding:14px 20px;max-width:1180px;margin:0 auto;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto;cursor:pointer}
+.logo{width:40px;height:40px;border-radius:11px;background:var(--green);color:#fff;display:grid;place-items:center;font:700 22px "Noto Sans Devanagari";flex:none}
+.brand b{display:block;font-size:18px;letter-spacing:-.01em}
+.brand span{display:block;font-size:12.5px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--card)}
+.seg button{border:0;background:none;padding:6px 14px;border-radius:999px;font:600 13.5px inherit;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+main{max-width:1180px;margin:0 auto;padding:8px 20px 56px}
+.notice{font-size:13px;color:var(--muted);background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:9px 14px;margin:6px 0 20px}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.1;letter-spacing:-.025em;margin:18px 0 10px}
+.lead{font-size:18px;color:var(--muted);max-width:640px;margin:0 0 26px}
+.steps{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 28px;padding:0;list-style:none}
+.steps li{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);background:var(--card);border:1px solid var(--line);padding:6px 12px;border-radius:999px}
+.steps i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--saffron-soft);color:var(--saffron);display:grid;place-items:center;font-weight:700;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.form-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;text-align:left;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s,border-color .15s;font:inherit;color:inherit}
+.form-card:hover,.form-card:focus-visible{transform:translateY(-3px);border-color:var(--saffron);outline:none}
+.form-card .count{display:inline-block;font-size:12px;font-weight:600;color:var(--green);background:var(--green-soft);padding:3px 9px;border-radius:999px;margin-bottom:12px}
+.form-card h3{margin:0 0 4px;font-size:19px}
+.form-card p{margin:0;color:var(--muted);font-size:14.5px}
+.work{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:22px;align-items:start}
+@media(max-width:900px){.work{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.assistant{padding:22px;position:sticky;top:12px}
+@media(max-width:900px){.assistant{position:static}}
+.progress{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:6px}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--saffron),var(--green));width:0;transition:width .35s}
+.pmeta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:18px}
+.q{min-height:110px;margin-bottom:14px}
+.q .main{font-size:clamp(22px,3vw,28px);line-height:1.25;font-weight:700;letter-spacing:-.01em}
+.q .sub{color:var(--muted);margin-top:8px;font-size:15px}
+.feedback{margin:0 0 14px;padding:10px 12px;border-radius:12px;font-size:14.5px;display:none}
+.feedback.err{display:block;background:var(--red-soft);color:var(--red)}
+.feedback.ok{display:block;background:var(--green-soft);color:var(--green)}
+.heard{font-size:13.5px;color:var(--muted);margin:0 0 14px;min-height:20px}
+.heard q{color:var(--ink);font-weight:500}
+.microw{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.mic{position:relative;width:84px;height:84px;border-radius:50%;border:0;background:var(--saffron);color:#fff;cursor:pointer;display:grid;place-items:center;flex:none;box-shadow:0 6px 18px rgba(232,115,12,.4);transition:transform .12s,background .2s}
+.mic:hover{transform:scale(1.04)} .mic:disabled{background:var(--muted);box-shadow:none;cursor:wait}
+.mic svg{width:34px;height:34px}
+.mic.rec{background:var(--red);box-shadow:0 6px 18px rgba(179,38,30,.4)}
+.mic.rec::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:3px solid var(--red);opacity:.5;animation:pulse 1.2s ease-out infinite}
+@keyframes pulse{from{transform:scale(.9);opacity:.6}to{transform:scale(1.25);opacity:0}}
+.mictext b{display:block;font-size:16px}.mictext span{font-size:13px;color:var(--muted)}
+.row{display:flex;gap:8px}
+.row input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:11px 14px;font:inherit}
+.row input:focus{outline:2px solid var(--saffron);border-color:transparent}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 16px;border-radius:12px;font:600 14px inherit;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.paper{padding:26px 28px;background:#fffefb;color:#1d2433;position:relative}
+@media (prefers-color-scheme:dark){.paper{background:#f7f3ea}}
+.paper h2{margin:0 0 2px;font-size:19px;letter-spacing:-.01em}
+.paper .sub{color:#5b6475;font-size:12.5px;margin-bottom:16px}
+.paper .rule{height:3px;background:linear-gradient(90deg,#ff9933 0 33%,#cfcfcf 33% 66%,#138808 66%);margin:0 0 14px;border-radius:2px}
+.fld{display:grid;grid-template-columns:150px 1fr auto;gap:10px;align-items:center;padding:9px 6px;border-bottom:1px solid #ece6d8;border-radius:8px}
+.fld.cur{background:#fff1e2;outline:2px solid #e8730c}
+.fld .lab{font-size:12.5px;color:#5b6475;line-height:1.25}.fld .lab em{display:block;font-style:normal;font-size:11.5px;opacity:.85}
+.fld .val{font-weight:600;min-height:22px;word-break:break-word}
+.fld .val.empty{color:#b9b3a3;font-weight:400}
+.fld .val.new{animation:fill .6s}
+@keyframes fill{from{background:#c9efc5}to{background:transparent}}
+.chip{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.chip.ok{background:var(--green-soft);color:#0e6b06}.chip.confirm{background:var(--amber-soft);color:#8a5000;cursor:pointer}
+.edit{border:0;background:none;color:#1f3a68;font:600 12px inherit;cursor:pointer;text-decoration:underline;padding:0 0 0 6px}
+.editor{display:flex;gap:6px;grid-column:1/-1}.editor input{flex:1;padding:8px 10px;border:1px solid #cfc7b4;border-radius:10px;font:inherit}
+.stamp{margin-top:16px;font-size:11.5px;color:#7a7364;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.review-banner{padding:16px 18px;border-radius:14px;margin-bottom:16px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.review-banner.warn{background:var(--amber-soft);color:var(--amber)}.review-banner.good{background:var(--green-soft);color:var(--green)}
+.hide{display:none!important}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;max-width:min(560px,92vw);font-size:14px;box-shadow:var(--shadow);z-index:9;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+.spin{width:22px;height:22px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+@media print{
+  body{background:#fff}.tricolor,header,.notice,#picker,.assistant,.toolbar-print,.toast,.review-banner,.edit,.chip,.noprint{display:none!important}
+  main{padding:0;max-width:none}.work{display:block}.card{box-shadow:none;border:0}.paper{padding:0}.fld{border-color:#ddd}
+  .fld{grid-template-columns:200px 1fr}.fld.cur{background:none;outline:none}
+}
+</style>
+</head>
+<body>
+<div class="tricolor"></div>
+<header>
+  <div class="brand" id="home" tabindex="0">
+    <div class="logo">भ</div>
+    <div><b>Sarkari Form Bharo</b><span class="hi">सरकारी फ़ॉर्म भरो · बोलिए, फ़ॉर्म तैयार</span></div>
+  </div>
+  <div class="seg" role="group" aria-label="Language">
+    <button id="lang-hi" aria-pressed="true" class="hi">हिन्दी</button>
+    <button id="lang-en" aria-pressed="false">English</button>
+  </div>
+</header>
+
+<main>
+  <div class="notice" id="notice"></div>
+
+  <section id="picker">
+    <h1 id="h1"></h1>
+    <p class="lead" id="lead"></p>
+    <ul class="steps" id="steps"></ul>
+    <div class="grid" id="cards"></div>
+  </section>
+
+  <section id="app" class="hide">
+    <div class="review-banner hide" id="banner"></div>
+    <div class="work">
+      <div class="card assistant" id="assistant">
+        <div class="progress"><i id="bar"></i></div>
+        <div class="pmeta"><span id="pcount"></span><span id="pform"></span></div>
+        <div class="q" aria-live="polite"><div class="main" id="qmain"></div><div class="sub" id="qsub"></div></div>
+        <div class="feedback" id="feedback" role="alert"></div>
+        <p class="heard" id="heard"></p>
+        <div class="microw">
+          <button class="mic" id="mic" aria-label="Record answer"></button>
+          <div class="mictext"><b id="mictitle"></b><span id="micsub"></span></div>
+        </div>
+        <form class="row" id="typed" autocomplete="off">
+          <input id="typedin" aria-label="Type your answer">
+          <button class="btn" id="typedgo"></button>
+        </form>
+        <div class="tools">
+          <button class="btn" id="replay"></button>
+          <button class="btn" id="back"></button>
+          <button class="btn" id="skip"></button>
+        </div>
+      </div>
+      <div class="card paper" id="paper"></div>
+    </div>
+    <div class="tools toolbar-print hide" id="finalbar" style="margin-top:18px">
+      <button class="btn primary" id="confirmall"></button>
+      <button class="btn" id="readback"></button>
+      <button class="btn primary" id="print"></button>
+      <button class="btn" id="again"></button>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const MIC='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a4 4 0 0 0 4-4V6a4 4 0 0 0-8 0v5a4 4 0 0 0 4 4zm6-4a6 6 0 0 1-12 0H4a8 8 0 0 0 7 7.93V22h2v-3.07A8 8 0 0 0 20 11h-2z"/></svg>';
+const STOP='<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+const T={
+  hi:{
+    notice:"डेमो: यह आधिकारिक सरकारी पोर्टल नहीं है। फ़ॉर्म का ढाँचा एक नमूना है। आपकी आवाज़ और जानकारी सेव नहीं की जाती। असली दस्तावेज़ों के बजाय नकली जानकारी से आज़माइए।",
+    h1:"बोलकर भरिए सरकारी फ़ॉर्म",lead:"फ़ॉर्म चुनिए। सवाल सुनिए। अपनी भाषा में जवाब दीजिए। हम सही अंग्रेज़ी में फ़ॉर्म तैयार कर देंगे।",
+    steps:["फ़ॉर्म चुनें","बोलकर जवाब दें","जाँचें और पुष्टि करें","प्रिंट करें"],fields:"सवाल",
+    tapSpeak:"बोलने के लिए दबाएँ",tapStop:"बात पूरी होने पर दबाएँ",listening:"सुन रहा हूँ…",working:"समझ रहा हूँ…",
+    type:"या यहाँ लिखकर जवाब दें",send:"भेजें",replay:"सवाल फिर सुनें",back:"पिछला",skip:"छोड़ें",
+    heard:"मैंने सुना:",progress:(i,n)=>`सवाल ${i} / ${n}`,
+    confirmChip:"पुष्टि करें",okChip:"ठीक",edit:"बदलें",save:"सेव",
+    reviewWarn:n=>`${n} जवाबों की पुष्टि बाक़ी है। नाम की अंग्रेज़ी स्पेलिंग ध्यान से देखें।`,reviewGood:"सब जवाब पक्के हो गए। फ़ॉर्म तैयार है।",
+    confirmAll:"सब सही हैं ✓",readback:"फ़ॉर्म सुनें",print:"प्रिंट / PDF",again:"नया फ़ॉर्म",
+    done:"सारे सवाल पूरे हुए। नीचे जाँचिए और पुष्टि कीजिए।",empty:"—",
+    micDenied:"माइक्रोफ़ोन की अनुमति नहीं मिली। आप लिखकर भी जवाब दे सकते हैं।",tooShort:"आवाज़ बहुत छोटी थी। कृपया फिर से बोलिए।",
+    stamp:"नमूना फ़ॉर्म · बोलकर तैयार किया गया",showAadhaar:"पूरा आधार दिखाएँ",
+    readIntro:"आपका फ़ॉर्म तैयार है। मैं पढ़कर सुनाता हूँ।",
+  },
+  en:{
+    notice:"Demo: this is not an official government portal. The form layout is a sample. Your voice and answers are not stored. Try it with made-up details, not real documents.",
+    h1:"Fill government forms by speaking",lead:"Pick a form. Listen to each question. Answer in your own language. We prepare the form in correct English.",
+    steps:["Choose a form","Answer by voice","Check & confirm","Print"],fields:"questions",
+    tapSpeak:"Tap to speak",tapStop:"Tap when you're done",listening:"Listening…",working:"Understanding…",
+    type:"Or type your answer here",send:"Send",replay:"Hear again",back:"Previous",skip:"Skip",
+    heard:"I heard:",progress:(i,n)=>`Question ${i} of ${n}`,
+    confirmChip:"Confirm",okChip:"OK",edit:"Edit",save:"Save",
+    reviewWarn:n=>`${n} answers still need your confirmation. Check the English spelling of names carefully.`,reviewGood:"All answers confirmed. Your form is ready.",
+    confirmAll:"All correct ✓",readback:"Hear the form",print:"Print / PDF",again:"New form",
+    done:"All questions answered. Check and confirm below.",empty:"—",
+    micDenied:"Microphone permission was denied. You can type your answers instead.",tooShort:"That was too short. Please speak again.",
+    stamp:"Sample form · prepared by voice",showAadhaar:"Show full Aadhaar",
+    readIntro:"Your form is ready. Let me read it back.",
+  }
+};
+const S={lang:"hi",forms:[],form:null,i:0,ans:{},busy:false,rec:null,fullAadhaar:false,finished:false};
+const audio=new Audio(); const ttsCache=new Map();
+const t=k=>T[S.lang][k];
+const L=(o,k)=>o[k+"_"+S.lang];
+
+function toast(msg,ms=4200){const el=$("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove("show"),ms)}
+async function api(path,opts){
+  const r=await fetch(path,opts); let data=null; try{data=await r.json()}catch{}
+  if(!r.ok) throw new Error((data&&data.detail)||`Request failed (${r.status})`);
+  return data;
+}
+
+/* ---------- text-to-speech with prefetch cache ---------- */
+function ttsKey(text,mixed){return S.lang+"|"+(mixed?1:0)+"|"+text}
+function fetchTTS(text,mixed=false){
+  const k=ttsKey(text,mixed);
+  if(!ttsCache.has(k)){
+    ttsCache.set(k,api("/api/tts",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,lang:S.lang,mixed})}).then(r=>r.audio).catch(e=>{ttsCache.delete(k);throw e}));
+  }
+  return ttsCache.get(k);
+}
+async function speak(text,mixed=false){
+  try{
+    audio.pause();
+    const b64=await fetchTTS(text,mixed);
+    audio.src="data:audio/wav;base64,"+b64;
+    await audio.play();
+    await new Promise(res=>{audio.onended=res;audio.onerror=res;audio.onpause=res});
+  }catch(e){ if(e.name!=="NotAllowedError") toast(e.message) }
+}
+
+/* ---------- picker ---------- */
+function renderStatic(){
+  document.documentElement.lang=S.lang;
+  $("lang-hi").setAttribute("aria-pressed",S.lang==="hi");$("lang-en").setAttribute("aria-pressed",S.lang==="en");
+  $("notice").textContent=t("notice");$("h1").textContent=t("h1");$("lead").textContent=t("lead");
+  $("steps").innerHTML=t("steps").map((s,n)=>`<li><i>${n+1}</i>${s}</li>`).join("");
+  $("cards").innerHTML=S.forms.map(f=>`<button class="form-card" data-id="${f.id}"><span class="count">${f.fields.length} ${t("fields")}</span><h3>${L(f,"title")}</h3><p>${L(f,"blurb")}</p></button>`).join("");
+  document.querySelectorAll(".form-card").forEach(b=>b.onclick=()=>startForm(b.dataset.id));
+  $("typedin").placeholder=t("type");$("typedgo").textContent=t("send");
+  $("replay").textContent="🔊 "+t("replay");$("back").textContent="← "+t("back");$("skip").textContent=t("skip")+" →";
+  $("confirmall").textContent=t("confirmAll");$("readback").textContent="🔊 "+t("readback");$("print").textContent="🖨 "+t("print");$("again").textContent=t("again");
+  if(S.form){renderQuestion();renderPaper()} else setMic("idle");
+}
+
+/* ---------- flow ---------- */
+async function startForm(id){
+  S.form=S.forms.find(f=>f.id===id);S.i=0;S.ans={};S.finished=false;
+  $("picker").classList.add("hide");$("app").classList.remove("hide");$("banner").classList.add("hide");$("finalbar").classList.add("hide");$("assistant").classList.remove("hide");
+  renderQuestion();renderPaper();window.scrollTo({top:0,behavior:"smooth"});
+  // The click is the user gesture that lets audio play.
+  speakQuestion();
+}
+const fld=()=>S.form.fields[S.i];
+function qText(f,lang=S.lang){return lang==="hi"?f.q_hi:f.q_en}
+function speakQuestion(){const f=fld();if(!f)return;speak(qText(f));prefetchNext()}
+function prefetchNext(){const n=S.form.fields[S.i+1];if(n)fetchTTS(qText(n)).catch(()=>{})}
+function setFeedback(msg,kind){const el=$("feedback");el.className="feedback"+(msg?" "+kind:"");el.textContent=msg||""}
+function renderQuestion(){
+  const f=fld();if(!f)return;const n=S.form.fields.length;
+  $("bar").style.width=(S.i/n*100)+"%";$("pcount").textContent=t("progress")(S.i+1,n);$("pform").textContent=L(S.form,"title");
+  $("qmain").textContent=qText(f);$("qsub").textContent=S.lang==="hi"?f.q_en:f.q_hi;$("qsub").lang=S.lang==="hi"?"en":"hi";
+  $("typedin").inputMode=(f.type==="digits"||f.type==="number")?"numeric":"text";
+  if(f.type==="choice")$("qsub").textContent=f.options.map(o=>L(o,"")+"").join(" · ");
+  if(f.type==="choice")$("qsub").textContent=f.options.map(o=>S.lang==="hi"?o.hi:o.en).join(" · ");
+  setMic("idle");
+}
+function setMic(state){
+  const m=$("mic");m.classList.toggle("rec",state==="rec");m.disabled=state==="busy";
+  m.innerHTML=state==="busy"?'<div class="spin"></div>':state==="rec"?STOP:MIC;
+  $("mictitle").textContent=state==="rec"?t("listening"):state==="busy"?t("working"):t("tapSpeak");
+  $("micsub").textContent=state==="rec"?t("tapStop"):"";
+}
+
+/* ---------- recording: capture, then re-encode to 16 kHz mono WAV ---------- */
+async function toggleMic(){
+  if(S.busy)return;
+  if(S.rec){S.rec.stop();return}
+  audio.pause();
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}catch{toast(t("micDenied"),6000);return}
+  const mr=new MediaRecorder(stream),chunks=[];
+  mr.ondataavailable=e=>chunks.push(e.data);
+  mr.onstop=async()=>{
+    clearTimeout(S.rec.timer);stream.getTracks().forEach(tr=>tr.stop());S.rec=null;setMic("busy");S.busy=true;
+    try{const wav=await blobToWav(new Blob(chunks,{type:mr.mimeType}));
+      if(!wav){toast(t("tooShort"));return}
+      await submit({audio:wav});
+    }catch(e){toast(e.message,6000)}finally{S.busy=false;setMic("idle")}
+  };
+  mr.start();S.rec=mr;S.rec.timer=setTimeout(()=>mr.state==="recording"&&mr.stop(),25000);setMic("rec");
+}
+async function blobToWav(blob){
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();
+  const buf=await ctx.decodeAudioData(await blob.arrayBuffer());ctx.close();
+  if(buf.duration<0.5)return null;
+  const off=new OfflineAudioContext(1,Math.ceil(buf.duration*16000),16000);
+  const src=off.createBufferSource();src.buffer=buf;src.connect(off.destination);src.start();
+  const pcm=(await off.startRendering()).getChannelData(0);
+  const out=new DataView(new ArrayBuffer(44+pcm.length*2));
+  const w=(o,s)=>[...s].forEach((c,i)=>out.setUint8(o+i,c.charCodeAt(0)));
+  w(0,"RIFF");out.setUint32(4,36+pcm.length*2,true);w(8,"WAVEfmt ");out.setUint32(16,16,true);out.setUint16(20,1,true);out.setUint16(22,1,true);
+  out.setUint32(24,16000,true);out.setUint32(28,32000,true);out.setUint16(32,2,true);out.setUint16(34,16,true);w(36,"data");out.setUint32(40,pcm.length*2,true);
+  for(let i=0;i<pcm.length;i++){const s=Math.max(-1,Math.min(1,pcm[i]));out.setInt16(44+i*2,s<0?s*0x8000:s*0x7fff,true)}
+  return new Blob([out],{type:"audio/wav"});
+}
+
+/* ---------- submit one answer ---------- */
+async function submit({audio:wav,text,fieldId,typed}){
+  const f=fieldId?S.form.fields.find(x=>x.id===fieldId):fld();
+  const fd=new FormData();fd.append("form_id",S.form.id);fd.append("field_id",f.id);fd.append("lang",S.lang);
+  if(wav)fd.append("audio",wav,"answer.wav");else fd.append("text",text);
+  const r=await api("/api/answer",{method:"POST",body:fd});
+  $("heard").innerHTML=r.transcript?`${t("heard")} <q></q>`:"";if(r.transcript)$("heard").querySelector("q").textContent=r.transcript;
+  if(!r.ok){
+    const msg=S.lang==="hi"?r.message_hi:r.message_en;setFeedback(msg,"err");speak(msg);return false;
+  }
+  setFeedback("","");
+  S.ans[f.id]={value:r.value,native:r.native,status:r.status,fresh:true};
+  renderPaper();
+  if(!fieldId){ advance(1) }
+  return true;
+}
+function advance(d){
+  const n=S.form.fields.length;S.i+=d;if(S.i<0)S.i=0;
+  if(S.i>=n){finish();return}
+  renderQuestion();$("heard").textContent=S.ans[fld().id]?"":"";speakQuestion();
+}
+function finish(){
+  S.finished=true;$("bar").style.width="100%";
+  $("assistant").classList.add("hide");$("finalbar").classList.remove("hide");renderPaper();
+  toast(t("done"));window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ---------- form preview ---------- */
+const mask=v=>"XXXX XXXX "+v.slice(-4);
+function show(f,a){
+  if(!a)return null;let v=a.value;
+  if(f.type==="date"){const[y,m,d]=v.split("-");v=`${d}/${m}/${y}`}
+  else if(f.type==="choice"){const o=f.options.find(o=>o.id===v);v=o?o.en:v}
+  else if(f.money)v="₹ "+Number(v).toLocaleString("en-IN");
+  else if(f.mask&&!S.fullAadhaar)v=mask(v);
+  else if(f.mask)v=v.replace(/(\d{4})(?=\d)/g,"$1 ");
+  return v;
+}
+function renderPaper(){
+  const form=S.form;if(!form)return;
+  const pending=form.fields.filter(f=>S.ans[f.id]&&S.ans[f.id].status==="confirm").length;
+  const cur=S.finished?null:fld();
+  const rows=form.fields.map(f=>{
+    const a=S.ans[f.id],v=show(f,a);
+    return `<div class="fld ${cur&&cur.id===f.id?"cur":""}" data-f="${f.id}">
+      <div class="lab">${f.label_en}<em class="hi">${f.label_hi}</em></div>
+      <div class="val ${v?"":"empty"} ${a&&a.fresh?"new":""}">${v?esc(v):t("empty")}</div>
+      <div>${a?(a.status==="confirm"?`<span class="chip confirm" data-c="${f.id}">${t("confirmChip")}</span>`:`<span class="chip ok">${t("okChip")}</span>`):""}${a?`<button class="edit" data-e="${f.id}">${t("edit")}</button>`:""}</div>
+    </div>`}).join("");
+  $("paper").innerHTML=`<div class="rule"></div><h2>${form.title_en}</h2><div class="sub hi">${form.title_hi}</div>${rows}
+    <div class="stamp"><span>${t("stamp")} · ${new Date().toLocaleDateString("en-IN")}</span>
+    <label class="noprint"><input type="checkbox" id="fullaad" ${S.fullAadhaar?"checked":""}> ${t("showAadhaar")}</label></div>`;
+  Object.values(S.ans).forEach(a=>a.fresh=false);
+  document.querySelectorAll("[data-c]").forEach(el=>el.onclick=()=>{S.ans[el.dataset.c].status="ok";renderPaper();updateBanner()});
+  document.querySelectorAll("[data-e]").forEach(el=>el.onclick=()=>openEditor(el.dataset.e));
+  const fa=$("fullaad");if(fa)fa.onchange=()=>{S.fullAadhaar=fa.checked;renderPaper()};
+  if(S.finished)updateBanner(pending);
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function openEditor(id){
+  const f=S.form.fields.find(x=>x.id===id),row=document.querySelector(`.fld[data-f="${id}"]`);
+  if(row.querySelector(".editor"))return;
+  const a=S.ans[id];const init=f.type==="choice"?"":(a.value);
+  const ed=document.createElement("form");ed.className="editor";
+  ed.innerHTML=`<input value="${esc(init)}" aria-label="${f.label_en}" placeholder="${esc(f.label_en)}"><button class="btn primary">${t("save")}</button>`;
+  row.appendChild(ed);const inp=ed.querySelector("input");inp.focus();
+  ed.onsubmit=async e=>{e.preventDefault();if(!inp.value.trim())return;
+    try{const ok=await submit({text:inp.value,fieldId:id,typed:true});if(ok){S.ans[id].status="ok";renderPaper();updateBanner()}}catch(err){toast(err.message)}};
+}
+function updateBanner(pending){
+  if(!S.finished)return;
+  if(pending===undefined)pending=S.form.fields.filter(f=>S.ans[f.id]&&S.ans[f.id].status==="confirm").length;
+  const b=$("banner");b.classList.remove("hide");b.className="review-banner "+(pending?"warn":"good");
+  b.innerHTML=`<b>${pending?t("reviewWarn")(pending):t("reviewGood")}</b>`;
+  $("print").disabled=pending>0;$("confirmall").classList.toggle("hide",!pending);
+}
+
+/* ---------- events ---------- */
+$("mic").onclick=toggleMic;
+$("typed").onsubmit=async e=>{e.preventDefault();const v=$("typedin").value.trim();if(!v||S.busy)return;
+  S.busy=true;setMic("busy");try{if(await submit({text:v}))$("typedin").value=""}catch(err){toast(err.message,6000)}finally{S.busy=false;setMic("idle")}};
+$("replay").onclick=()=>speak(qText(fld()));
+$("back").onclick=()=>{if(S.i>0)advance(-1)};
+$("skip").onclick=()=>advance(1);
+$("confirmall").onclick=()=>{Object.values(S.ans).forEach(a=>a.status="ok");renderPaper();updateBanner()};
+$("print").onclick=()=>window.print();
+$("again").onclick=()=>location.reload();
+$("home").onclick=()=>{if(S.form&&!confirm(S.lang==="hi"?"वापस जाएँ? अब तक के जवाब मिट जाएँगे।":"Go back? Your answers so far will be lost."))return;location.reload()};
+$("lang-hi").onclick=()=>{S.lang="hi";renderStatic()};$("lang-en").onclick=()=>{S.lang="en";renderStatic()};
+document.addEventListener("keydown",e=>{if(e.code==="Space"&&!/INPUT|TEXTAREA|BUTTON/.test(document.activeElement.tagName)&&S.form&&!S.finished){e.preventDefault();toggleMic()}});
+$("readback").onclick=async()=>{
+  const parts=[t("readIntro")];
+  S.form.fields.forEach(f=>{const a=S.ans[f.id];if(!a)return;let v=show(f,{...a});if(f.mask)v=a.value.replace(/\d/g,"$& ").trim();
+    parts.push(`${S.lang==="hi"?f.label_hi:f.label_en}: ${v}.`)});
+  const text=parts.join(" ");
+  // The API caps each request, so speak the read-back in chunks.
+  const chunks=[];let cur="";for(const p of parts){if((cur+" "+p).length>520){chunks.push(cur);cur=p}else cur=cur?cur+" "+p:p}if(cur)chunks.push(cur);
+  $("readback").disabled=true;try{for(const c of chunks)await speak(c,true)}finally{$("readback").disabled=false}
+};
+
+(async function init(){
+  renderStatic();
+  try{S.forms=await api("/api/forms");renderStatic()}catch(e){toast(e.message,8000)}
+})();
+</script>
+</body>
+</html>

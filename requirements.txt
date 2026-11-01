@@ -1,0 +1,3 @@
+fastapi
+python-multipart
+sarvamai>=0.1.41
