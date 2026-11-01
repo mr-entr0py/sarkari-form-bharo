@@ -301,7 +301,8 @@ def resolve(field: dict, transcript: str, typed: bool) -> dict:
             raise Rejected("That date doesn't look right. Please say it again.", "यह तारीख सही नहीं लगती। कृपया फिर से बताइए।")
         value, confidence = d.isoformat(), got["confidence"]
     else:  # name / text
-        got = llm_extract(field, t) if not typed else {"value": t, "confidence": "high"}
+        # Typed Latin text is already clean; anything spoken or in Indic script goes through the LLM.
+        got = {"value": t, "confidence": "high"} if (typed and not HAS_INDIC.search(t)) else llm_extract(field, t)
         if not got["value"]:
             raise Rejected("I couldn't understand that. Please say it again.", "मैं समझ नहीं पाया। कृपया फिर से बताइए।")
         native = got["value"] if HAS_INDIC.search(got["value"]) else None
@@ -312,7 +313,7 @@ def resolve(field: dict, transcript: str, typed: bool) -> dict:
             raise Rejected("That answer looks too long or unclear. Please say it again.", "यह उत्तर बहुत लंबा या अस्पष्ट है। कृपया फिर से बताइए।")
 
     # Names are phonetic transliterations, so they always need the applicant's confirmation.
-    needs_confirm = (not typed) and (confidence != "high" or (kind in ("name", "text") and field.get("render") != "translate" and native is not None))
+    needs_confirm = confidence != "high" or (kind in ("name", "text") and field.get("render") != "translate" and native is not None)
     return {"value": value, "native": native, "status": "confirm" if needs_confirm else "ok"}
 
 
