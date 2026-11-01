@@ -197,6 +197,7 @@ h1{font-size:clamp(28px,4.4vw,44px);line-height:1.1;letter-spacing:-.025em;margi
     <div class="tools toolbar-print hide" id="finalbar" style="margin-top:18px">
       <button class="btn primary" id="confirmall"></button>
       <button class="btn" id="readback"></button>
+      <button class="btn primary hide" id="fillorig"></button>
       <button class="btn primary" id="print"></button>
       <button class="btn" id="again"></button>
     </div>
@@ -223,6 +224,7 @@ const T={
     micDenied:"माइक्रोफ़ोन की अनुमति नहीं मिली। आप लिखकर भी जवाब दे सकते हैं।",tooShort:"आवाज़ बहुत छोटी थी। कृपया फिर से बोलिए।",
     stamp:"नमूना फ़ॉर्म · बोलकर तैयार किया गया",showAadhaar:"पूरा आधार दिखाएँ",
     readIntro:"आपका फ़ॉर्म तैयार है। मैं पढ़कर सुनाता हूँ।",
+    fillOrig:"📄 भरा हुआ असली फ़ॉर्म (PDF)",fillDone:n=>`आपके असली फ़ॉर्म में ${n} जवाब भर दिए गए।`,fillMissing:l=>`ये हाथ से भरें: ${l}`,
     anyForm:"कोई भी फ़ॉर्म",uploadTitle:"अपना सरकारी फ़ॉर्म अपलोड करें",uploadBlurb:"PDF या फ़ोटो। Sarvam Vision उसे पढ़कर सवाल बना देगा।",
     scanUp:"फ़ॉर्म अपलोड हो रहा है…",scanRead:"Sarvam Vision फ़ॉर्म पढ़ रहा है (OCR)…",scanThink:"फ़ॉर्म के सवाल समझे जा रहे हैं…",
     scanDone:n=>`फ़ॉर्म तैयार: ${n} सवाल मिले।`,scanSlow:"बहुत समय लग रहा है। कृपया फिर कोशिश करें।",tooBig:"फ़ाइल 4 MB से छोटी होनी चाहिए।",
@@ -244,6 +246,7 @@ const T={
     micDenied:"Microphone permission was denied. You can type your answers instead.",tooShort:"That was too short. Please speak again.",
     stamp:"Sample form · prepared by voice",showAadhaar:"Show full Aadhaar",
     readIntro:"Your form is ready. Let me read it back.",
+    fillOrig:"📄 Filled original form (PDF)",fillDone:n=>`Filled ${n} answers on your original form.`,fillMissing:l=>`Please write these by hand: ${l}`,
     anyForm:"Any form",uploadTitle:"Upload your government form",uploadBlurb:"PDF or photo, up to 10 pages. Sarvam Vision reads it and turns it into spoken questions.",
     scanUp:"Uploading your form…",scanRead:"Sarvam Vision is reading the form (OCR)…",scanThink:"Understanding the form's questions…",
     scanDone:n=>`Form ready: ${n} questions found.`,scanSlow:"This is taking too long. Please try again.",tooBig:"The file must be under 4 MB.",
@@ -308,7 +311,7 @@ function renderStatic(){
   $("uploadcard").onclick=()=>{unlockAudio();$("filein").click()};
   $("typedin").placeholder=t("type");$("typedgo").textContent=t("send");
   $("replay").textContent="🔊 "+t("replay");$("back").textContent="← "+t("back");$("skip").textContent=t("skip")+" →";
-  $("confirmall").textContent=t("confirmAll");$("readback").textContent="🔊 "+t("readback");$("print").textContent="🖨 "+t("print");$("again").textContent=t("again");
+  $("confirmall").textContent=t("confirmAll");$("fillorig").textContent=t("fillOrig");$("readback").textContent="🔊 "+t("readback");$("print").textContent="🖨 "+t("print");$("again").textContent=t("again");
   if(S.form){renderQuestion();renderPaper()} else setMic("idle");
 }
 
@@ -452,6 +455,7 @@ function updateBanner(pending){
   const b=$("banner");b.classList.remove("hide");b.className="review-banner "+(pending?"warn":"good");
   b.innerHTML=`<b>${pending?t("reviewWarn")(pending):t("reviewGood")}</b>`;
   $("print").disabled=pending>0;$("confirmall").classList.toggle("hide",!pending);
+  $("fillorig").disabled=pending>0;$("fillorig").classList.toggle("hide",!(S.form.id==="custom"&&S.srcIsPdf));
 }
 
 /* ---------- any form: upload -> Sarvam Vision OCR -> Sarvam-105B questions ---------- */
@@ -471,6 +475,7 @@ async function scanFile(file){
   if(!file)return;
   file=await shrinkImage(file);
   if(file.size>4e6){toast(t("tooBig"),6000);return}
+  S.srcFile=file;S.srcIsPdf=file.type==="application/pdf";
   scanMsg(t("scanUp"));$("uploadcard").disabled=true;
   try{
     const fd=new FormData();fd.append("file",file);fd.append("lang",S.voice);
@@ -499,6 +504,20 @@ $("back").onclick=()=>{if(S.i>0)advance(-1)};
 $("skip").onclick=()=>advance(1);
 $("confirmall").onclick=()=>{Object.values(S.ans).forEach(a=>a.status="ok");renderPaper();updateBanner()};
 $("print").onclick=()=>window.print();
+$("fillorig").onclick=async()=>{
+  const b=$("fillorig");b.disabled=true;
+  try{
+    const fd=new FormData();fd.append("file",S.srcFile);fd.append("form_json",JSON.stringify(S.form));
+    fd.append("answers_json",JSON.stringify(Object.fromEntries(Object.entries(S.ans).map(([k,a])=>[k,a.value]))));
+    const r=await fetch("/api/fill",{method:"POST",body:fd});
+    if(!r.ok){let d=null;try{d=await r.json()}catch{}throw new Error((d&&d.detail)||`Request failed (${r.status})`)}
+    const url=URL.createObjectURL(await r.blob());
+    const a=document.createElement("a");a.href=url;a.download="filled-"+(S.srcFile.name||"form.pdf");document.body.appendChild(a);a.click();a.remove();
+    window.open(url,"_blank");
+    let missing=[];try{missing=JSON.parse(r.headers.get("X-Missing")||"[]")}catch{}
+    toast(t("fillDone")(r.headers.get("X-Placed")||"?")+(missing.length?" "+t("fillMissing")(missing.join(", ")):""),9000);
+  }catch(e){toast(e.message,8000)}finally{b.disabled=false}
+};
 $("again").onclick=()=>location.reload();
 $("home").onclick=()=>{if(S.form&&!confirm(S.lang==="hi"?"वापस जाएँ? अब तक के जवाब मिट जाएँगे।":"Go back? Your answers so far will be lost."))return;location.reload()};
 $("lang-hi").onclick=()=>{S.lang="hi";renderStatic()};$("lang-en").onclick=()=>{S.lang="en";renderStatic()};
