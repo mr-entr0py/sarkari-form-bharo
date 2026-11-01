@@ -14,9 +14,7 @@
   --amber:#a15c00; --amber-soft:#fff3d6; --red:#b3261e; --red-soft:#fde8e6; --navy:#1f3a68;
   --radius:16px; --shadow:0 1px 2px rgba(29,36,51,.06),0 8px 24px rgba(29,36,51,.06);
 }
-@media (prefers-color-scheme:dark){
-  :root{--bg:#14161c;--card:#1d2028;--ink:#eef0f5;--muted:#a3abbb;--line:#2e3340;--saffron-soft:#3a2a18;--green-soft:#17301a;--amber-soft:#3a2f12;--red-soft:#3b1b19;--amber:#f0b44c;--red:#ff8a80;--green:#5ccf4f}
-}
+:root{color-scheme:light}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:16px/1.5 Inter,"Noto Sans Devanagari",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
@@ -77,7 +75,10 @@ h1{font-size:clamp(28px,4.4vw,44px);line-height:1.1;letter-spacing:-.025em;margi
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .paper{padding:26px 28px;background:#fffefb;color:#1d2433;position:relative}
-@media (prefers-color-scheme:dark){.paper{background:#f7f3ea}}
+.form-card.upload{border:2px dashed var(--saffron);background:var(--saffron-soft)}
+.form-card.upload .count{color:var(--saffron);background:#fff}
+.scanning{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin:0 0 16px;font-weight:600}
+.scanning .spin{border-color:rgba(232,115,12,.25);border-top-color:var(--saffron)}
 .paper h2{margin:0 0 2px;font-size:19px;letter-spacing:-.01em}
 .paper .sub{color:#5b6475;font-size:12.5px;margin-bottom:16px}
 .paper .rule{height:3px;background:linear-gradient(90deg,#ff9933 0 33%,#cfcfcf 33% 66%,#138808 66%);margin:0 0 14px;border-radius:2px}
@@ -145,6 +146,8 @@ h1{font-size:clamp(28px,4.4vw,44px);line-height:1.1;letter-spacing:-.025em;margi
     <div id="pitchslot"></div>
     <ul class="steps hide" id="steps"></ul>
     <div class="card how"><h2 id="howtitle"></h2><ol id="howlist"></ol><p class="tip" id="howtip"></p></div>
+    <div class="scanning hide" id="scanbox" role="status"><div class="spin"></div><span id="scanmsg"></span></div>
+    <input type="file" id="filein" accept=".pdf,image/png,image/jpeg" hidden>
     <div class="grid" id="cards"></div>
   </section>
   <template id="pitchtpl">
@@ -158,6 +161,7 @@ h1{font-size:clamp(28px,4.4vw,44px);line-height:1.1;letter-spacing:-.025em;margi
         <div class="card pc"><b>🎙 Voice-first</b><p>No complicated forms or long typing.</p></div>
         <div class="card pc"><b>🗣 Multilingual</b><p>9 Indian languages, spoken naturally.</p></div>
         <div class="card pc"><b>✅ Intelligent validation</b><p>Catches wrong or incomplete answers instead of accepting them.</p></div>
+        <div class="card pc"><b>📄 Any form</b><p>Upload any government form as a PDF or photo. Sarvam Vision reads it.</p></div>
         <div class="card pc"><b>🖨 Ready to use</b><p>A conversation becomes a printable application.</p></div>
       </div>
       <p class="vision"><b>Our vision:</b> access to government services independent of language, literacy, or familiarity with paperwork.</p>
@@ -219,8 +223,11 @@ const T={
     micDenied:"माइक्रोफ़ोन की अनुमति नहीं मिली। आप लिखकर भी जवाब दे सकते हैं।",tooShort:"आवाज़ बहुत छोटी थी। कृपया फिर से बोलिए।",
     stamp:"नमूना फ़ॉर्म · बोलकर तैयार किया गया",showAadhaar:"पूरा आधार दिखाएँ",
     readIntro:"आपका फ़ॉर्म तैयार है। मैं पढ़कर सुनाता हूँ।",
+    anyForm:"कोई भी फ़ॉर्म",uploadTitle:"अपना सरकारी फ़ॉर्म अपलोड करें",uploadBlurb:"PDF या फ़ोटो। Sarvam Vision उसे पढ़कर सवाल बना देगा।",
+    scanUp:"फ़ॉर्म अपलोड हो रहा है…",scanRead:"Sarvam Vision फ़ॉर्म पढ़ रहा है (OCR)…",scanThink:"फ़ॉर्म के सवाल समझे जा रहे हैं…",
+    scanDone:n=>`फ़ॉर्म तैयार: ${n} सवाल मिले।`,scanSlow:"बहुत समय लग रहा है। कृपया फिर कोशिश करें।",tooBig:"फ़ाइल 4 MB से छोटी होनी चाहिए।",
     howTitle:"कैसे इस्तेमाल करें",
-    how:["ऊपर 🎙 से <b>अपनी भाषा</b> चुनिए (हिन्दी, मराठी, தமிழ் और भी)।","नीचे से <b>फ़ॉर्म चुनिए</b>। सहायक पहला सवाल बोलकर पूछेगा।","<b>नारंगी माइक बटन</b> दबाइए, जवाब बोलिए, फिर दोबारा दबाइए। माइक की अनुमति माँगी जाए तो ‘Allow’ करें।","कोई गलती हो (जैसे आधार में 12 अंक न हों) तो सहायक <b>फिर से पूछेगा</b>। चाहें तो लिखकर भी जवाब दे सकते हैं।","आख़िर में फ़ॉर्म <b>जाँचिए</b>, नामों की अंग्रेज़ी स्पेलिंग की <b>पुष्टि</b> कीजिए, ‘फ़ॉर्म सुनें’ से सुनिए और <b>प्रिंट / PDF</b> कीजिए।"],
+    how:["ऊपर 🎙 से <b>अपनी भाषा</b> चुनिए (हिन्दी, मराठी, தமிழ் और भी)।","<b>कोई भी सरकारी फ़ॉर्म अपलोड करें</b> (PDF या फ़ोटो), या नीचे से तैयार फ़ॉर्म चुनिए। सहायक पहला सवाल बोलकर पूछेगा।","<b>नारंगी माइक बटन</b> दबाइए, जवाब बोलिए, फिर दोबारा दबाइए। माइक की अनुमति माँगी जाए तो ‘Allow’ करें।","कोई गलती हो (जैसे आधार में 12 अंक न हों) तो सहायक <b>फिर से पूछेगा</b>। चाहें तो लिखकर भी जवाब दे सकते हैं।","आख़िर में फ़ॉर्म <b>जाँचिए</b>, नामों की अंग्रेज़ी स्पेलिंग की <b>पुष्टि</b> कीजिए, ‘फ़ॉर्म सुनें’ से सुनिए और <b>प्रिंट / PDF</b> कीजिए।"],
     howTip:"सुझाव: शांत जगह पर बोलें, एक बार में एक जवाब दें। आज़माने के लिए नकली जानकारी इस्तेमाल करें।",
   },
   en:{
@@ -237,8 +244,11 @@ const T={
     micDenied:"Microphone permission was denied. You can type your answers instead.",tooShort:"That was too short. Please speak again.",
     stamp:"Sample form · prepared by voice",showAadhaar:"Show full Aadhaar",
     readIntro:"Your form is ready. Let me read it back.",
+    anyForm:"Any form",uploadTitle:"Upload your government form",uploadBlurb:"PDF or photo, up to 10 pages. Sarvam Vision reads it and turns it into spoken questions.",
+    scanUp:"Uploading your form…",scanRead:"Sarvam Vision is reading the form (OCR)…",scanThink:"Understanding the form's questions…",
+    scanDone:n=>`Form ready: ${n} questions found.`,scanSlow:"This is taking too long. Please try again.",tooBig:"The file must be under 4 MB.",
     howTitle:"How to use",
-    how:["Pick <b>your language</b> from the 🎙 menu at the top (Hindi, Marathi, Tamil and more).","<b>Choose a form</b> below. The assistant asks the first question out loud.","Tap the <b>orange mic button</b>, speak your answer, then tap it again. Allow microphone access if asked.","If something is wrong (say, an Aadhaar without 12 digits), the assistant <b>asks again</b>. You can also type any answer.","At the end, <b>review</b> the form, <b>confirm</b> the English spelling of names, tap ‘Hear the form’, then <b>Print / PDF</b>."],
+    how:["Pick <b>your language</b> from the 🎙 menu at the top (Hindi, Marathi, Tamil and more).","<b>Upload any government form</b> (PDF or photo), or pick a ready-made one below. The assistant asks the first question out loud.","Tap the <b>orange mic button</b>, speak your answer, then tap it again. Allow microphone access if asked.","If something is wrong (say, an Aadhaar without 12 digits), the assistant <b>asks again</b>. You can also type any answer.","At the end, <b>review</b> the form, <b>confirm</b> the English spelling of names, tap ‘Hear the form’, then <b>Print / PDF</b>."],
     howTip:"Tip: speak in a quiet place, one answer at a time. Use made-up details when trying it out.",
   }
 };
@@ -293,8 +303,9 @@ function renderStatic(){
   $("notice").textContent=t("notice");$("h1").textContent=t("h1");$("lead").textContent=t("lead");
   $("steps").innerHTML=t("steps").map((s,n)=>`<li><i>${n+1}</i>${s}</li>`).join("");
   $("howtitle").textContent=t("howTitle");$("howlist").innerHTML=t("how").map(s=>`<li>${s}</li>`).join("");$("howtip").textContent=t("howTip");
-  $("cards").innerHTML=S.forms.map(f=>`<button class="form-card" data-id="${f.id}"><span class="count">${f.fields.length} ${t("fields")}</span><h3>${L(f,"title")}</h3><p>${L(f,"blurb")}</p></button>`).join("");
-  document.querySelectorAll(".form-card").forEach(b=>b.onclick=()=>startForm(b.dataset.id));
+  $("cards").innerHTML=`<button class="form-card upload" id="uploadcard"><span class="count">📄 ${t("anyForm")}</span><h3>${t("uploadTitle")}</h3><p>${t("uploadBlurb")}</p></button>`+S.forms.map(f=>`<button class="form-card" data-id="${f.id}"><span class="count">${f.fields.length} ${t("fields")}</span><h3>${L(f,"title")}</h3><p>${L(f,"blurb")}</p></button>`).join("");
+  document.querySelectorAll(".form-card[data-id]").forEach(b=>b.onclick=()=>startForm(b.dataset.id));
+  $("uploadcard").onclick=()=>$("filein").click();
   $("typedin").placeholder=t("type");$("typedgo").textContent=t("send");
   $("replay").textContent="🔊 "+t("replay");$("back").textContent="← "+t("back");$("skip").textContent=t("skip")+" →";
   $("confirmall").textContent=t("confirmAll");$("readback").textContent="🔊 "+t("readback");$("print").textContent="🖨 "+t("print");$("again").textContent=t("again");
@@ -369,6 +380,7 @@ async function submit({audio:wav,text,fieldId,typed}){
   const f=fieldId?S.form.fields.find(x=>x.id===fieldId):fld();
   const fd=new FormData();fd.append("form_id",S.form.id);fd.append("field_id",f.id);fd.append("lang",S.voice);
   if(wav)fd.append("audio",wav,"answer.wav");else fd.append("text",text);
+  if(S.form.id==="custom")fd.append("field_json",JSON.stringify(f));
   const r=await api("/api/answer",{method:"POST",body:fd});
   $("heard").innerHTML=r.transcript?`${t("heard")} <q></q>`:"";if(r.transcript)$("heard").querySelector("q").textContent=r.transcript;
   if(!r.ok){
@@ -441,6 +453,30 @@ function updateBanner(pending){
   b.innerHTML=`<b>${pending?t("reviewWarn")(pending):t("reviewGood")}</b>`;
   $("print").disabled=pending>0;$("confirmall").classList.toggle("hide",!pending);
 }
+
+/* ---------- any form: upload -> Sarvam Vision OCR -> Sarvam-105B questions ---------- */
+function scanMsg(m){$("scanbox").classList.toggle("hide",!m);$("scanmsg").textContent=m||""}
+async function scanFile(file){
+  if(!file)return;
+  if(file.size>4e6){toast(t("tooBig"),6000);return}
+  scanMsg(t("scanUp"));$("uploadcard").disabled=true;
+  try{
+    const fd=new FormData();fd.append("file",file);fd.append("lang",S.voice);
+    const {job_id,filename}=await api("/api/scan",{method:"POST",body:fd});
+    scanMsg(t("scanRead"));
+    for(const t0=Date.now();Date.now()-t0<180000;){
+      await new Promise(r=>setTimeout(r,2500));
+      scanMsg(t("scanThink"));
+      const r=await api(`/api/scan/${encodeURIComponent(job_id)}?filename=${encodeURIComponent(filename)}`);
+      if(r.status==="done"){
+        S.forms=S.forms.filter(f=>f.id!=="custom").concat(r.form);scanMsg("");
+        toast(t("scanDone")(r.form.fields.length));startForm("custom");return;
+      }
+    }
+    throw new Error(t("scanSlow"));
+  }catch(e){scanMsg("");toast(e.message,8000)}finally{$("filein").value="";const u=$("uploadcard");if(u)u.disabled=false}
+}
+$("filein").onchange=e=>scanFile(e.target.files[0]);
 
 /* ---------- events ---------- */
 $("mic").onclick=toggleMic;
