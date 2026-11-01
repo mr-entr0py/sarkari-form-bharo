@@ -98,7 +98,7 @@ h1{font-size:clamp(28px,4.4vw,44px);line-height:1.1;letter-spacing:-.025em;margi
 .how{padding:20px 24px;margin:0 0 22px}.how h2{margin:0 0 10px;font-size:19px}
 .how ol{margin:0;padding-left:22px;display:grid;gap:7px}.how li{font-size:15px}.how li b{color:var(--saffron)}
 .how .tip{margin:12px 0 0;font-size:13.5px;color:var(--muted);background:var(--green-soft);padding:9px 12px;border-radius:10px}
-.pitch{margin-top:40px}
+.pitch{margin:0 0 28px}
 .tag{font-size:clamp(20px,2.6vw,26px);font-weight:700;letter-spacing:-.01em;margin:0 0 16px}.tag span{display:block;font-size:15px;color:var(--muted);font-weight:500;margin-top:4px}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:14px}
 .pgrid.four{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
@@ -142,9 +142,12 @@ h1{font-size:clamp(28px,4.4vw,44px);line-height:1.1;letter-spacing:-.025em;margi
   <section id="picker">
     <h1 id="h1"></h1>
     <p class="lead" id="lead"></p>
-    <ul class="steps" id="steps"></ul>
+    <div id="pitchslot"></div>
+    <ul class="steps hide" id="steps"></ul>
     <div class="card how"><h2 id="howtitle"></h2><ol id="howlist"></ol><p class="tip" id="howtip"></p></div>
     <div class="grid" id="cards"></div>
+  </section>
+  <template id="pitchtpl">
     <div class="pitch">
       <p class="tag">Just speak. We'll handle the paperwork.<span class="hi">बस बोलिए, कागज़ी काम हम सँभाल लेंगे।</span></p>
       <div class="pgrid">
@@ -160,7 +163,7 @@ h1{font-size:clamp(28px,4.4vw,44px);line-height:1.1;letter-spacing:-.025em;margi
       <p class="vision"><b>Our vision:</b> access to government services independent of language, literacy, or familiarity with paperwork.</p>
       <p class="powered">Powered by Sarvam AI · Saaras (speech) · Sarvam-105B (understanding) · Transliterate &amp; Translate · Bulbul (voice)</p>
     </div>
-  </section>
+  </template>
 
   <section id="app" class="hide">
     <div class="review-banner hide" id="banner"></div>
@@ -466,6 +469,7 @@ $("readback").onclick=async()=>{
 };
 
 (async function init(){
+  $("pitchslot").appendChild($("pitchtpl").content.cloneNode(true));
   renderStatic();
   try{S.forms=await api("/api/forms");renderStatic()}catch(e){toast(e.message,8000)}
 })();
