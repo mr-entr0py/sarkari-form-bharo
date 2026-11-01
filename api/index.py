@@ -147,6 +147,7 @@ FORMS = {
 DEVANAGARI_DIGITS = str.maketrans("०१२३४५६७८९", "0123456789")
 HAS_INDIC = re.compile(r"[ऀ-෿]")
 EMAIL = re.compile(r"[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}")
+IFSC = re.compile(r"[A-Z]{4}0[A-Z0-9]{6}")
 GENERIC_SUFFIX = re.compile(r"\s+(jila|jilla|zila|zilla|district|gaon|gaanv|gaav|gram|village)$", re.I)
 
 
@@ -208,6 +209,7 @@ def llm_extract(field: dict, transcript: str) -> dict:
             "'mera naam', 'hai', and generic words such as जिला/ज़िला/district, गाँव/गांव/village, राज्य/state"
         ),
         "email": "an email address in lowercase; spoken 'at the rate'/'at' means @ and 'dot' means .",
+        "ifsc": "an Indian bank IFSC code: 11 characters (4 letters, then 0, then 6 letters or digits), capital Latin letters and digits, no spaces",
         "date": f"a date as ISO YYYY-MM-DD (today is {dt.date.today().isoformat()}); null if day, month and year are not all given",
         "digits": f"exactly {field.get('length')} digits written as plain digits; convert spoken digit words",
         "number": "a plain number with no commas or units; convert words such as lakh (100000) and hazaar (1000)",
@@ -323,6 +325,14 @@ def resolve(field: dict, transcript: str, typed: bool, src: str = "hi-IN") -> di
         if (field.get("past", True) and d > dt.date.today()) or d.year < dt.date.today().year - 120:
             raise Rejected("That date doesn't look right. Please say it again.", "यह तारीख सही नहीं लगती। कृपया फिर से बताइए।")
         value, confidence = d.isoformat(), got["confidence"]
+    elif kind == "ifsc":
+        cand = re.sub(r"[^A-Za-z0-9]", "", t if typed else (llm_extract(field, t)["value"] or "")).upper()
+        if not IFSC.fullmatch(cand):
+            raise Rejected(
+                "An IFSC code has 11 characters: 4 letters, then 0, then 6 letters or digits. Please say it again.",
+                "IFSC कोड में 11 अक्षर होते हैं: 4 अक्षर, फिर 0, फिर 6 अक्षर या अंक। कृपया फिर से बताइए।",
+            )
+        value, confidence = cand, ("high" if typed else "medium")
     elif kind == "email":
         cand = t if (typed and "@" in t) else (llm_extract(field, t)["value"] or "")
         cand = cand.strip().lower().replace(" ", "")
@@ -348,7 +358,7 @@ def resolve(field: dict, transcript: str, typed: bool, src: str = "hi-IN") -> di
 
 
 # ------------------------------------------------------------- any form via OCR
-FIELD_TYPES = {"text", "date", "digits", "number", "choice", "email"}
+FIELD_TYPES = {"text", "date", "digits", "number", "choice", "email", "ifsc"}
 RENDERS = {"translit", "translate", "english"}
 MAX_FIELDS = 40
 
@@ -379,7 +389,9 @@ def sanitize_field(f: dict) -> Optional[dict]:
     }
     low = (en + " " + out["label_hi"]).lower()
     # Identity numbers always get strict, deterministic checks, whatever the model said.
-    if re.search(r"aadha+r|आधार", low):
+    if re.search(r"ifsc", low):
+        out["type"] = "ifsc"
+    elif re.search(r"aadha+r|आधार", low):
         out.update(type="digits", length=12, sensitive=True, mask=True)
     elif re.search(r"mobile|phone|contact no|मोबाइल|फ़ोन|फोन", low):
         out.update(type="digits", length=10, mobile=True)
@@ -403,7 +415,10 @@ def sanitize_field(f: dict) -> Optional[dict]:
                 return float(f.get(k))
             except (TypeError, ValueError):
                 return d
-        out.update(min=num("min", 0), max=num("max", 1e10), decimal=bool(f.get("decimal")) or bool(re.search(r"acre|hectare|area|bigha|एकड़|क्षेत्र", low)))
+        lo, hi = num("min", 0), num("max", 1e10)
+        if hi <= lo:  # the model sometimes emits a 0-0 range; fall back to sane limits
+            lo, hi = 0, 1e10
+        out.update(min=lo, max=hi, decimal=bool(f.get("decimal")) or bool(re.search(r"acre|hectare|area|bigha|एकड़|क्षेत्र", low)))
         out["money"] = bool(f.get("money")) or bool(re.search(r"income|salary|amount|fee|₹|rs\.?|rupee|आय|राशि", low))
     elif t == "choice":
         opts, seen = [], set()
